@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 import java.text.Format;
@@ -29,14 +31,16 @@ public class KafkaConsumer {
     private String topicDlq;
 
     @KafkaListener(topics = "${topic.main}")
-    public void consumeFromMainTopic(String message) {
-        log.info("Consumed Message = {}", message);
+    public void consumeFromMainTopic(String message,
+                                     @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                                     @Header(KafkaHeaders.OFFSET) String offset) {
+        log.info("Consumed Message [key={}, offset={}, message={}", key, offset, message);
         Message serializedMessage;
         try {
             serializedMessage = objectMapper.readValue(message, Message.class);
             if (serializedMessage.getAction() != null && serializedMessage.getAction().startsWith("retry")) {
                 log.warn("Message is broken, sending to {}", topicRetry);
-                serializedMessage.setStatus("RETRAYABLE");
+                serializedMessage.setStatus("Retrying of " + key);
                 kafkaTemplate.send(topicRetry, FORMATTER.format(new Date()), serializedMessage);
             }
         } catch (Exception e) {
@@ -45,8 +49,10 @@ public class KafkaConsumer {
     }
 
     @KafkaListener(topics = "${topic.retry}")
-    public void consumeFromRetryTopic(String message) {
-        log.info("Consumed Message = {}", message);
+    public void consumeFromRetryTopic(String message,
+                                      @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                                      @Header(KafkaHeaders.OFFSET) String offset) {
+        log.info("Consumed Message [key={}, offset={}, message={}", key, offset, message);
         Message serializedMessage;
         try {
             serializedMessage = objectMapper.readValue(message, Message.class);
@@ -57,9 +63,9 @@ public class KafkaConsumer {
                 loop++;
                 Thread.sleep(loop * 1000);
             }
-            log.warn("Message is completely broken, sending to {}", topicDlq);
+            log.info("Message is completely broken, sending to {}", topicDlq);
             serializedMessage.setStatus("BROKEN");
-            kafkaTemplate.send(topicDlq,  FORMATTER.format(new Date()), serializedMessage);
+            kafkaTemplate.send(topicDlq, FORMATTER.format(new Date()), serializedMessage);
 
         } catch (Exception e) {
             log.error("Cannot handle message {}", e.getMessage(), e);
@@ -67,7 +73,9 @@ public class KafkaConsumer {
     }
 
     @KafkaListener(topics = "${topic.dlq}")
-    public void consumeFromDlqTopic(String message) {
-        log.error("Consumed Message and Triggering onDuty = {}", message);
+    public void consumeFromDlqTopic(String message,
+                                    @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                                    @Header(KafkaHeaders.OFFSET) String offset) {
+        log.error("Consumed Message [key={}, offset={}, message={}", key, offset, message);
     }
 }
