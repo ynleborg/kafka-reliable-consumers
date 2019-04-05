@@ -1,0 +1,4 @@
+topic:
+  main: "external"
+  retry: "esternal-retry"
+  dlq: "external-dlq"
