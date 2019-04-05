@@ -34,7 +34,7 @@ public class KafkaConsumer {
     public void consumeFromMainTopic(String message,
                                      @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                                      @Header(KafkaHeaders.OFFSET) String offset) {
-        log.info("Consumed Message [key={}, offset={}, message={}", key, offset, message);
+        log.info("consumeFromMainTopic [key={}, offset={}, message={}", key, offset, message);
         Message serializedMessage;
         try {
             serializedMessage = objectMapper.readValue(message, Message.class);
@@ -52,7 +52,7 @@ public class KafkaConsumer {
     public void consumeFromRetryTopic(String message,
                                       @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                                       @Header(KafkaHeaders.OFFSET) String offset) {
-        log.info("Consumed Message [key={}, offset={}, message={}", key, offset, message);
+        log.info("consumeFromRetryTopic [key={}, offset={}, message={}", key, offset, message);
         Message serializedMessage;
         try {
             serializedMessage = objectMapper.readValue(message, Message.class);
@@ -76,6 +76,6 @@ public class KafkaConsumer {
     public void consumeFromDlqTopic(String message,
                                     @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                                     @Header(KafkaHeaders.OFFSET) String offset) {
-        log.error("Consumed Message [key={}, offset={}, message={}", key, offset, message);
+        log.error("consumeFromDlqTopic [key={}, offset={}, message={}", key, offset, message);
     }
 }
