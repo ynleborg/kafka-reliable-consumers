@@ -1,5 +1,5 @@
-server: "192.168.0.107:32768"
+server: "192.168.0.107:32770"
 topic:
   main: "external"
-  retry: "esternal-retry"
+  retry: "external-retry"
   dlq: "external-dlq"
