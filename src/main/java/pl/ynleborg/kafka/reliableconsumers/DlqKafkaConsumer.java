@@ -23,6 +23,6 @@ public class DlqKafkaConsumer {
     public void consumeFromDlqTopic(String message,
                                     @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                                     @Header(KafkaHeaders.OFFSET) String offset) {
-        log.error("consumeFromDlqTopic [key={}, offset={}, message={}]", key, offset, message);
+        log.error("Consume from DLQ topic [key={}, offset={}, message={}]", key, offset, message);
     }
 }

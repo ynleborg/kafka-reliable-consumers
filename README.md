@@ -5,18 +5,14 @@ ok message
 ```
 {
     "id" : "{{uuid}}",
-    "order" : {{count}},
-    "createdAt" : "{{timestamp}}",
-    "action" : "foo"
+    "action" : "0"
 }
 ```
 
-retry message
+retry message (delay 1 second)
 ```
 {
     "id" : "{{uuid}}",
-    "order" : {{count}},
-    "createdAt" : "{{timestamp}}",
-    "action" : "retry3"
+    "action" : "1"
 }
 ```

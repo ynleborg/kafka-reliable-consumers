@@ -1,4 +1,4 @@
-server: "192.168.0.107:32770"
+server: "77.55.229.200:32769"
 topic:
   main: "external"
   retry: "external-retry"
