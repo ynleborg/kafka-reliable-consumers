@@ -24,7 +24,7 @@ public class RetryKafkaConsumer {
 
     private ObjectMapper objectMapper;
 
-    public RestTemplate restTemplateForRetrying;
+    private RestTemplate restTemplateForRetrying;
 
     @Value("${topic.dlq}")
     private String topicDlq;

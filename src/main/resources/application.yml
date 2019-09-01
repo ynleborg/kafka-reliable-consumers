@@ -1,4 +1,4 @@
-server: "77.55.229.200:32769"
+server: "HOST:PORT"
 topic:
   main: "external"
   retry: "external-retry"
