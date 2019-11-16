@@ -1,4 +1,4 @@
-package pl.ynleborg.kafka.reliableconsumers;
+package pl.ynleborg.kafka.reliableconsumers.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -10,6 +10,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import pl.ynleborg.kafka.reliableconsumers.Message;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

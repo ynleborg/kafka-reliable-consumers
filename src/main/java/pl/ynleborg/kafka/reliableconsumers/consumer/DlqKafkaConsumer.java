@@ -1,4 +1,4 @@
-package pl.ynleborg.kafka.reliableconsumers;
+package pl.ynleborg.kafka.reliableconsumers.consumer;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

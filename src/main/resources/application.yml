@@ -3,3 +3,6 @@ topic:
   main: "external"
   retry: "external-retry"
   dlq: "external-dlq"
+logging:
+  pattern:
+    console: "%d{HH:mm:ss} %-5level %20.30logger{36} - %msg%n"
