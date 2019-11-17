@@ -1,5 +1,6 @@
 package pl.ynleborg.kafka.reliableconsumers.consumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.ynleborg.kafka.reliableconsumers.Message;
+import pl.ynleborg.kafka.reliableconsumers.RetryableMessage;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,7 +36,7 @@ public class KafkaConsumer {
     @KafkaListener(topics = "${topic.main}")
     public void consumeFromMainTopic(String message,
                                      @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
-                                     @Header(KafkaHeaders.OFFSET) String offset) {
+                                     @Header(KafkaHeaders.OFFSET) String offset) throws JsonProcessingException {
         log.info("Consume from main topic [key={}, offset={}, message={}]", key, offset, message);
         Message serializedMessage;
         try {
@@ -43,13 +45,17 @@ public class KafkaConsumer {
             log.info("Done processing [key={}, offset={}]", key, offset);
         } catch (Exception e) {
             log.error("Cannot handle message: {}", e.getMessage());
-            copyMessageToRetry(message);
+            copyMessageToRetry(message, key, offset);
         }
     }
 
-    private void copyMessageToRetry(String message) {
+    private void copyMessageToRetry(String originalMessage, String originalKey, String originalOffset) throws JsonProcessingException {
         String key = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         log.warn("Copying message [target={}, key={}]", topicRetry, key);
-        kafkaTemplate.send(topicRetry, key, message);
+        kafkaTemplate.send(topicRetry, key, objectMapper.writeValueAsString(RetryableMessage.builder()
+                .originalMessage(originalMessage)
+                .originalKey(originalKey)
+                .originalOffset(originalOffset)
+                .build()));
     }
 }

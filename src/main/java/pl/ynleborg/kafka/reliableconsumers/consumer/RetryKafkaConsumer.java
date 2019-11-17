@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.ynleborg.kafka.reliableconsumers.Message;
+import pl.ynleborg.kafka.reliableconsumers.RetryableMessage;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,29 +36,32 @@ public class RetryKafkaConsumer {
                                       @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                                       @Header(KafkaHeaders.OFFSET) String offset) {
         log.info("Consume from retry topic [key={}, offset={}, message={}]", key, offset, message);
-        Message serializedMessage;
+        RetryableMessage retryableMessage;
+        String exceptionClass = null;
         long loop = 1;
         boolean success = false;
         while (loop <= 3 && !success) {
             try {
-                serializedMessage = objectMapper.readValue(message, Message.class);
+                retryableMessage = objectMapper.readValue(message, RetryableMessage.class);
+                Message originalMessage = objectMapper.readValue(retryableMessage.getOriginalMessage(), Message.class);
                 Thread.sleep(loop * 500);
                 log.info("Retrying message in loop {}", loop);
-                restTemplateForRetrying.getForEntity(POSTMAN_RESOURCE_URL + serializedMessage.getAction(), String.class);
+                restTemplateForRetrying.getForEntity(POSTMAN_RESOURCE_URL + originalMessage.getAction(), String.class);
                 success = true;
                 log.info("Done processing [key={}, offset={}]", key, offset);
             } catch (Exception e) {
-                log.error("Cannot handle message {}", e.getMessage());
+                log.error("Cannot handle message: {}", e.getMessage());
+                exceptionClass = e.getClass().getName();
             }
             loop++;
         }
         if (!success) {
-            copyMessageToDlq(message);
+            copyMessageToDlq(message, exceptionClass);
         }
     }
 
-    private void copyMessageToDlq(String message) {
-        String key = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    private void copyMessageToDlq(String message, String exceptionClass) {
+        String key = new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + exceptionClass;
         log.warn("Copying message [target={}, key={}]", topicDlq, key);
         kafkaTemplate.send(topicDlq, key, message);
     }
