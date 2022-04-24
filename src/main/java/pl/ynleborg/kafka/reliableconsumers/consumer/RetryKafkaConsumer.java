@@ -3,6 +3,7 @@ package pl.ynleborg.kafka.reliableconsumers.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import pl.ynleborg.kafka.reliableconsumers.Message;
 import pl.ynleborg.kafka.reliableconsumers.RetryableMessage;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -50,6 +52,7 @@ public class RetryKafkaConsumer {
                 success = true;
                 log.info("Done processing [key={}, offset={}]", key, offset);
             } catch (Exception e) {
+                Thread.currentThread().interrupt();
                 log.error("Cannot handle message: {}", e.getMessage());
                 exceptionClass = e.getClass().getName();
             }
@@ -61,8 +64,11 @@ public class RetryKafkaConsumer {
     }
 
     private void copyMessageToDlq(String message, String exceptionClass) {
-        String key = new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + exceptionClass;
+        String key = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         log.warn("Copying message [target={}, key={}]", topicDlq, key);
-        kafkaTemplate.send(topicDlq, key, message);
+        ProducerRecord<String, String> dlqMessage = new ProducerRecord<>(topicDlq, key, message);
+        dlqMessage.headers().add("exception", exceptionClass.getBytes(StandardCharsets.UTF_8));
+        kafkaTemplate.send(dlqMessage);
     }
+
 }

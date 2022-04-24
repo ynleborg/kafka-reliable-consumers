@@ -32,6 +32,9 @@ public class KafkaConsumer {
     @Value("${topic.retry}")
     private String topicRetry;
 
+    @Value("${topic.out}")
+    private String topicOut;
+
 
     @KafkaListener(topics = "${topic.main}")
     public void consumeFromMainTopic(String message,
@@ -42,6 +45,7 @@ public class KafkaConsumer {
         try {
             serializedMessage = objectMapper.readValue(message, Message.class);
             restTemplate.getForEntity(POSTMAN_RESOURCE_URL + serializedMessage.getAction(), String.class);
+            kafkaTemplate.send(topicOut, objectMapper.writeValueAsString(serializedMessage));
             log.info("Done processing [key={}, offset={}]", key, offset);
         } catch (Exception e) {
             log.error("Cannot handle message: {}", e.getMessage());

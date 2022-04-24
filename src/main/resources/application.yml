@@ -1,8 +1,9 @@
-server: "192.168.1.34:32770"
+server: "172.20.14.119:8001"
 topic:
-  main: "external"
-  retry: "external-retry"
-  dlq: "external-dlq"
+  main: "events-in"
+  retry: "events-retry"
+  dlq: "events-dlq"
+  out: "events-out"
 logging:
   pattern:
     console: "%d{HH:mm:ss} %-5level %20.30logger{36} - %msg%n"
